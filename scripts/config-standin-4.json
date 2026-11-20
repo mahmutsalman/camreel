@@ -1,0 +1,10 @@
+{
+  "sources": [
+    { "url": "http://127.0.0.1:8777/guest?n=1&auth=FAKE-TOKEN-1111", "name": "Ana" },
+    { "url": "http://127.0.0.1:8777/guest?n=2&auth=FAKE-TOKEN-2222", "name": "Bob" },
+    { "url": "http://127.0.0.1:8777/guest?n=3&auth=FAKE-TOKEN-3333", "name": "Cem" },
+    { "url": "http://127.0.0.1:8777/guest?n=4&auth=FAKE-TOKEN-4444", "name": "Dee" }
+  ],
+  "layout": { "side": "right", "cycleSeconds": 8 },
+  "window": { "width": 1920, "height": 1080, "background": "#00ff00" }
+}

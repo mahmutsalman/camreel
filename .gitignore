@@ -1,0 +1,8 @@
+node_modules/
+config.json
+src/update-feed.json
+proof/*.json.tmp
+.DS_Store
+dist/
+tools/cover/camreel-cover
+dist-release/

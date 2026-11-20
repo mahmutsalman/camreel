@@ -1,0 +1,96 @@
+{
+  "name": "camreel",
+  "version": "0.3.5",
+  "private": true,
+  "description": "CamReel: Twitch Stream Together guest cameras in a cycling strip that Meld Studio captures.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "standin": "node standin/server.js",
+    "test:redact": "node scripts/test-redact.js",
+    "dist:mac": "electron-builder --mac --universal",
+    "dist:win": "electron-builder --win --x64",
+    "test:dead": "node scripts/scenario-dead-guests.js",
+    "test:settings": "node scripts/scenario-settings.js",
+    "test:seats": "node scripts/test-seats.js",
+    "test:updater": "node scripts/test-updater.js"
+  },
+  "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "26.17.0"
+  },
+  "productName": "CamReel",
+  "author": "Mahmut Salman",
+  "build": {
+    "appId": "com.kinesinships.camreel",
+    "productName": "CamReel",
+    "copyright": "© 2026 Mahmut Salman",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false,
+      "x64ArchFiles": "**/camreel-winwatch"
+    },
+    "dmg": {
+      "sign": true,
+      "title": "CamReel"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "asarUnpack": [
+      "src/assets/bin/**"
+    ],
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "CamReel-Setup-${version}.exe",
+      "shortcutName": "CamReel",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mahmutsalman/camreel"
+  }
+}

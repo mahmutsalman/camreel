@@ -1,0 +1,66 @@
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg, #00ff00); }
+body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
+#stage { position: fixed; inset: 0; -webkit-app-region: drag; /* drag the frameless window by its background */ perspective: var(--perspective); perspective-origin: 50% 50%; }
+#column {
+  position: absolute; top: 0; bottom: 0; width: var(--card-w);
+  transform-style: preserve-3d;
+  transform: rotateY(var(--tilt));
+}
+#column.right { right: var(--margin); transform-origin: 100% 50%; }
+#column.left  { left: var(--margin);  transform-origin: 0% 50%; }
+#track { position: absolute; left: 0; right: 0; top: 0; height: 0; will-change: transform; transform-style: preserve-3d; }
+/* Every card is placed by renderer.js (transform). A PARKED card (its guest has no live
+   video) stays rendered at full size in the middle of the window, fully transparent, so
+   Chromium keeps its page and video running and it can come back. */
+.card {
+  -webkit-app-region: no-drag;
+  position: absolute; left: 0; top: 0; width: var(--card-w);
+  box-sizing: border-box; padding: var(--pad, 0px);
+  border-radius: var(--radius); overflow: hidden;
+  background: var(--frame, #111); box-shadow: var(--shadow, 0 0 #0000), var(--outline, 0 0 #0000); /* both off by default */
+  /* --rx/--zr: the 3D drum (a card on a wheel of radius --zr, turned --rx); --tz: a hair of depth that keeps
+     the stacking order of deck/fade cards inside the 3D context. All 0 for pingpong. */
+  transform: translate3d(0, var(--y, 0px), calc(var(--tz, 0px) - var(--zr, 0px))) rotateX(var(--rx, 0deg)) translate3d(0, 0, var(--zr, 0px)) scale(var(--s, 1));
+  opacity: var(--o, 1);
+  transition: transform .6s ease-in-out, opacity .45s ease;
+}
+.card.parked { transition: none; pointer-events: none; z-index: -1; box-shadow: none; }
+/* A parked guest only has to keep running so we notice when its camera returns: render
+   its page at a tiny size (much less to paint), full size again the moment it shows. */
+.small-park .card.parked webview { width: 64px; height: 36px; }
+.small-park .card.parked { padding: 0; }
+.card.snap { transition: none; }
+/* driven styles (loop, step, fade, deck, drum): renderer.js moves every card each frame, so no transform
+   transition (it would lag and smear the jump to the far end); opacity still eases */
+body.driven .card { transition: opacity .35s ease; }
+body.driven .card.parked, body.driven .card.snap { transition: none; }
+body.style-drum .card { backface-visibility: hidden; }
+/* A <webview> MUST stay display:flex: Electron sizes its inner page with flex, and display:block leaves the
+   guest page shorter than the card (2026-10-28: Twitch drew its video in the top ~64 %, black below). */
+.card webview { display: flex; width: var(--pic-w); height: var(--card-h); background: #000; }
+.card canvas.guest { display: block; width: var(--pic-w); height: var(--card-h); background: #000; }
+.card .name {
+  height: var(--strip); line-height: var(--strip); padding: 0 var(--name-pad, 14px); text-align: var(--name-align, left);
+  background: linear-gradient(90deg, var(--accent), #1b1b22 70%);
+  color: #fff; font-weight: 700; font-size: var(--name-size, calc(var(--strip) * .5)); letter-spacing: .3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.card .status {
+  position: absolute; left: var(--pad, 0px); top: var(--pad, 0px); width: var(--pic-w); height: var(--card-h);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  color: #bbb; font-size: 16px; pointer-events: none; background: #000;
+}
+.card.loaded .status { display: none; }
+#debug {
+  position: fixed; left: 16px; top: 16px; z-index: 10; padding: 10px 14px;
+  background: rgba(0,0,0,.82); color: #9f9; font: 13px/1.5 ui-monospace, Menlo, monospace;
+  border-radius: 8px; white-space: pre;
+}
+#debug .err { color: #ff7b7b; }
+/* MIRROR: flip only the guest's picture. The card frame and CamReel's name strip stay as they are. */
+.card.mirrored webview, .card.mirrored canvas.guest { transform: scaleX(-1); }
+
+/* Drag the strip from ANYWHERE: before 0.3.5 only the empty background between cards could be grabbed, so one
+   guest filling the window made it immovable. Invisible (the stream sees nothing); 6 px edges stay free for resizing.
+   Nothing on the strip needs a click (sound/mute live in Settings). */
+#grab { position: fixed; inset: 6px; -webkit-app-region: drag; z-index: 2147483647; background: transparent; }

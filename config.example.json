@@ -1,0 +1,30 @@
+{
+  "sources": [
+    { "url": "PASTE-GUEST-1-BROWSER-SOURCE-URL-HERE", "name": "Guest 1" },
+    { "url": "PASTE-GUEST-2-BROWSER-SOURCE-URL-HERE", "name": "Guest 2" }
+  ],
+  "hideWhenDead": true,
+  "deadAfterSeconds": 4,
+  "showAfterSeconds": 1,
+  "layout": {
+    "side": "right",
+    "cardWidth": 420,
+    "gap": 28,
+    "margin": 60,
+    "tiltDegrees": 18,
+    "perspective": 1400,
+    "cycleSeconds": 24,
+    "cycleDistance": 0,
+    "cornerRadius": 18,
+    "nameStrip": true,
+    "accent": "#9b5cff"
+  },
+  "window": {
+    "width": 1920,
+    "height": 1080,
+    "frameless": true,
+    "background": "#00ff00",
+    "alwaysOnTop": false
+  },
+  "audio": { "muted": false }
+}

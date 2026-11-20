@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>CamReel — Settings</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>CamReel</h1>
+      <p class="sub">Paste ONE of your Stream Together links below (next to the +), then click <b>Add guest seats</b>. The strip shows only guests whose camera is live.</p>
+    </div>
+    <div id="viewSwitch" role="tablist" aria-label="How much to show">
+      <button data-view="simple" role="tab">Simple</button><button data-view="advanced" role="tab">Advanced</button>
+    </div>
+    <nav id="jump" class="adv-only">
+      <a href="#sec-guests">Guests</a><a href="#sec-motion">Motion</a><a href="#sec-cards">Cards</a><a href="#sec-names">Names</a><a href="#sec-window">Window &amp; Meld</a>
+    </nav>
+  </header>
+  <div id="banner" hidden></div>
+  <div id="updateBar" hidden><span id="updateMsg"></span> <button id="updateNow">Restart to update</button></div>
+  <div id="stripBanner" hidden><span id="stripMsg"></span> <button id="bringBack">Bring strip back</button></div>
+  <p id="stripHint" class="muted small" hidden>Keep the strip window fully visible (not minimized, not in Stage Manager's side strip): Meld captures what is drawn.</p>
+
+  <div class="layout">
+  <main>
+  <!-- every control row says WHICH PART of the strip it changes (data-hl) and how (data-tip): pointing at it
+       lights that part up in the preview on the right -->
+  <section id="sec-guests" data-hl="guests" data-tip="Each live guest is one card on the strip. Off = not loaded at all (costs nothing).">
+    <h2><span class="ico">👥</span> Guests <span id="count" class="muted"></span></h2>
+    <table id="sources">
+      <thead><tr><th class="c-on">On</th><th class="c-name">Name</th><th>Link</th><th class="c-st">Status</th><th class="c-mir">Mirror</th><th class="c-ord">Order</th><th class="c-del"></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="pasteError" class="inline-error" hidden></div>
+    <div id="seatOffer" class="seat-offer" hidden></div>
+    <p class="hint small-note adv-only">⇋ mirrors a camera (left ↔ right). Only the camera picture is mirrored; text inside it stays readable.</p>
+    <p class="hint">🔴 These links are secret: anyone with one can show that guest's camera. Never show this window on stream.</p>
+  </section>
+
+  <!-- Simple view: the one thing besides links a new user may need -->
+  <section id="sec-simple" class="simple-only">
+    <h2><span class="ico">🪟</span> Strip</h2>
+    <div class="simple-row">
+      <label>Background
+        <select id="bgSimple"><option value="transparent">transparent (only the cards show)</option><option value="green">green (for a Chroma Key)</option><option value="custom" hidden>custom colour (see Advanced)</option></select>
+      </label>
+      <button id="showStripSimple" type="button">Show Strip</button>
+    </div>
+    <p class="hint">Black box around the cards in OBS or Meld? Pick <b>green</b>, then add a <b>Chroma Key</b> filter there.
+      Motion, card look, names and window size: <a href="#" id="toAdvanced">Advanced</a>.</p>
+  </section>
+
+  <section id="sec-motion" class="adv-only">
+    <h2><span class="ico">🎞</span> Motion <span class="affects">moves the cards</span></h2>
+    <div id="styleTiles" class="tiles" data-hl="motion" data-tip="How the cards move on the strip."></div>
+    <div class="grid" id="anim">
+      <label class="hidden-select">Style <select data-k="layout.style">
+        <option value="pingpong">Up and down</option>
+        <option value="loop">Endless loop</option>
+        <option value="step">Step and hold</option>
+        <option value="fade">Fade</option>
+        <option value="deck">Deck of cards</option>
+        <option value="drum">3D drum</option>
+        <option value="still">Still</option>
+      </select></label>
+      <label data-for="pingpong" data-hl="motion" data-tip="One full trip down and back up, in seconds. 0 = still.">Cycle seconds <input type="number" min="0" max="3600" data-k="layout.cycleSeconds" data-num> <span class="muted">0 = still</span></label>
+      <label data-for="loop step fade deck drum" data-hl="motion" data-tip="Loop: its speed. The others: how long each guest stays before the next."><span id="perGuestLabel">Seconds on each guest</span> <input type="number" min="0.5" max="600" step="0.5" data-k="layout.secondsPerGuest" data-num></label>
+      <label data-for="step fade deck drum" data-hl="motion" data-tip="How long the change from one guest to the next takes.">Change takes (s) <input type="number" min="0.1" max="10" step="0.1" data-k="layout.slideSeconds" data-num></label>
+      <label data-for="loop step" data-hl="motion" data-tip="Which way the cards travel.">Direction <select data-k="layout.direction"><option value="up">up</option><option value="down">down</option></select></label>
+      <label class="check smart wide" data-hl="motion" data-tip="When every live guest fits in the strip, nothing moves and they stand centred. Too few guests to loop without a gap: up and down instead."><input type="checkbox" data-k="layout.smartFit"> Move only when they don't all fit</label>
+    </div>
+    <p id="styleNote" class="style-note"></p>
+    <div id="loopWarn" class="warn-box" hidden></div>
+  </section>
+
+  <section id="sec-cards" class="adv-only">
+    <h2><span class="ico">🟪</span> Cards <span class="affects">each guest's box</span></h2>
+    <div class="grid" id="layout">
+      <label data-hl="card" data-tip="How wide each card is. 0 = fill the window from edge to edge (minus the side margins).">Card width <input type="number" min="0" max="3840" step="10" data-k="layout.cardWidth" data-num> <span class="muted">0 = fill</span></label>
+      <label data-hl="gap" data-tip="Empty space between two cards.">Gap between cards <input type="number" min="0" max="200" data-k="layout.gap" data-num></label>
+      <label data-hl="frame" data-tip="A frame round each camera picture, inside the card. 0 = the picture touches the card's edges.">Card padding <input type="number" min="0" max="120" data-k="layout.cardPadding" data-num></label>
+      <label data-hl="frame" data-tip="The colour of that frame (and behind a picture that is still loading).">Frame colour <input type="color" data-k="layout.frameColor"></label>
+      <label data-hl="card" data-tip="How round the cards' corners are.">Corner radius <input type="number" min="0" max="80" data-k="layout.cornerRadius" data-num></label>
+      <label data-hl="card" data-tip="Turns the whole column in 3D. 0 = flat (Meld's Corner Pin can tilt it too).">Tilt degrees <input type="number" min="-60" max="60" data-k="layout.tiltDegrees" data-num> <span class="muted">0 = flat</span></label>
+      <label class="check" data-hl="card" data-tip="A soft drop shadow under every card."><input type="checkbox" data-k="layout.shadow"> Card shadow</label>
+      <label class="check" data-hl="outline" data-tip="A thin line round every card, in the accent colour."><input type="checkbox" data-k="layout.outline"> Card outline</label>
+      <label data-hl="outline" data-tip="The colour of the outline and of the name strip's glow.">Accent <input type="color" data-k="layout.accent"></label>
+      <label class="check" data-hl="picture" data-tip="The default for every camera; a camera's own ⇋ choice wins."><input type="checkbox" data-k="layout.mirrorAll"> Mirror all cameras</label>
+      <label class="check" data-hl="picture" data-tip="Mutes every guest's sound in CamReel."><input type="checkbox" data-k="audio.muted"> Mute guests</label>
+    </div>
+  </section>
+
+  <section id="sec-names" class="adv-only">
+    <h2><span class="ico">🏷</span> Names <span class="affects">the strip under each picture</span></h2>
+    <div class="grid" id="names">
+      <label class="check" data-hl="name" data-tip="CamReel's own name strip under each picture."><input type="checkbox" data-k="layout.nameStrip"> Name strip</label>
+      <label data-hl="name" data-tip="How tall the name strip is. 0 = automatic.">Height <input type="number" min="0" max="400" data-k="layout.nameHeight" data-num> <span class="muted">0 = auto</span></label>
+      <label data-hl="name" data-tip="Space between the strip's edge and the name.">Padding <input type="number" min="0" max="400" data-k="layout.namePadding" data-num></label>
+      <label data-hl="name" data-tip="The name's letter size. 0 = automatic.">Text size <input type="number" min="0" max="400" data-k="layout.nameSize" data-num> <span class="muted">0 = auto</span></label>
+      <label data-hl="name" data-tip="Where the name sits in its strip.">Position <select data-k="layout.nameAlign"><option value="left">left</option><option value="center">centre</option><option value="right">right</option></select></label>
+      <label class="check" data-hl="twitchname" data-tip="Hides the name Twitch draws INSIDE the video. CamReel's own name strip stays."><input type="checkbox" data-k="layout.hideTwitchName"> Hide Twitch's name tag</label>
+    </div>
+  </section>
+
+  <section id="sec-window" class="adv-only">
+    <h2><span class="ico">🪟</span> Window &amp; Meld <span class="affects">what Meld captures</span></h2>
+    <div class="grid" id="win">
+      <div class="presets meld wide" data-hl="window" data-tip="Type the size Meld shows under the CamReel layer and click Match: the strip takes exactly that size, so the cards fill Meld's box with no black bars.">Meld box
+        <input type="number" id="meldW" min="50" max="3840" placeholder="432"> × <input type="number" id="meldH" min="50" max="2160" placeholder="830">
+        <button id="matchMeld">Match</button> <span id="matchNote" class="muted"></span></div>
+      <label data-hl="window" data-tip="The strip window's width. You can also drag the window's edge.">Window width <input type="number" min="200" max="3840" step="10" data-k="window.width" data-num></label>
+      <label data-hl="window" data-tip="The strip window's height. Taller = room for more guests at once.">Window height <input type="number" min="200" max="2160" step="10" data-k="window.height" data-num></label>
+      <label class="check" data-hl="window" data-tip="On: the strip's size can't be changed by dragging its edges (only here). Off: drag an edge to resize; the new size is saved."><input type="checkbox" data-k="window.lockSize"> Lock size (no dragging)</label>
+      <label data-hl="margin-side" data-tip="Space between the window's side edge and the cards.">Side margin <input type="number" min="0" max="400" data-k="layout.margin" data-num></label>
+      <label data-hl="margin-v" data-tip="Space above the first card and below the last one. -1 = the same as the side margin.">Top/bottom margin <input type="number" min="-1" max="400" data-k="layout.verticalMargin" data-num> <span class="muted">-1 = same</span></label>
+      <label data-hl="margin-side" data-tip="Which side the cards hug when they are narrower than the window.">Side <select data-k="layout.side"><option value="left">left</option><option value="right">right</option></select></label>
+      <label data-hl="bg" data-tip="Transparent: only the cards show in Meld. Green: for a Chroma Key, if Meld shows black instead of transparent.">Background
+        <select id="bgMode"><option value="transparent">transparent</option><option value="green">green (chroma key)</option><option value="custom">custom colour</option></select>
+        <input type="color" id="bgColor" hidden>
+      </label>
+      <label class="check" data-hl="window" data-tip="Always on top of other windows, so Stage Manager can't park it and the stream keeps the full picture."><input type="checkbox" data-k="window.keepVisible"> Keep strip visible</label>
+      <div class="presets wide" data-hl="window" data-tip="Quick sizes for the strip window.">Presets <button data-size="920x1080">Strip 920×1080</button><button data-size="1920x1080">Wide 1920×1080</button> <span id="winSize" class="muted"></span></div>
+    </div>
+  </section>
+  <footer class="muted">In Meld: Display capture → pick the WINDOW “CamReel — Strip” (not the whole screen). OBS on Mac: macOS Screen Capture → Window Capture. OBS on Windows: Window Capture → [CamReel.exe]: CamReel — Strip.</footer>
+  </main>
+
+  <aside id="previewPane">
+    <div class="pv-card">
+      <div class="pv-head">What your stream sees <span id="pvSize" class="muted"></span></div>
+      <svg id="preview" role="img" aria-label="A drawing of the strip with the current settings"></svg>
+      <div id="pvMotion" class="pv-motion"></div>
+      <div id="pvTip" class="pv-tip adv-only">Point at any setting: the part of the strip it changes lights up here.</div>
+      <div class="pv-legend adv-only"><span><i class="lg pic"></i>camera</span><span><i class="lg nm"></i>name strip</span><span><i class="lg hl"></i>changes now</span></div>
+    </div>
+  </aside>
+  </div>
+  <script src="seats.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "sources": [
+    { "url": "https://dashboard.twitch.tv/widgets/guest-star/somechannel?display=single&slot=1", "name": "Twitch (no token)" },
+    { "url": "http://127.0.0.1:8777/guest?n=2&auth=FAKE-TOKEN-2222", "name": "Stand-in" }
+  ],
+  "layout": { "side": "right", "cycleSeconds": 0, "cardWidth": 640 },
+  "window": { "width": 1920, "height": 1080, "background": "#00ff00" }
+}
